@@ -1,5 +1,5 @@
-import java.util.Scanner;
 
+import java.util.Scanner;
 public class Controlador {
     private Scanner scanner;
 
@@ -17,20 +17,18 @@ public class Controlador {
                 case 1:
                 System.out.println("Operaciones Aritmeticas");
                 System.out.println("Escribe tu expresión Lisp o escribe 'exit' para salir.");
-                while (true) {
-                    System.out.print("");
-                    String input = scanner.nextLine();
-                    if (input.equals("exit")) {
-                        break;
-                    }
-                    try {
-                        int result = operaciones.evaluatePostfix(input);
-                        System.out.println("Resultado: " + result);
-                    } catch (Exception e) {
-                        System.out.println("Error: " + e.getMessage());
-                    }
+                Scanner scanner = new Scanner(System.in);
+                String line = scanner.nextLine();
+                try {
+                    int result = operaciones.evaluatePostfix(line);
+                    System.out.println("Resultado: " + result);
+
+                } catch (IllegalArgumentException e) {
+                    System.out.println(e.getMessage());
                 }
-                break;
+            
+                    break;
+                    
                 case 2:
                     System.out.println("Usar instrucción QUOTE...");
                     break;
@@ -57,7 +55,9 @@ public class Controlador {
                     System.out.println("Opción no válida. Por favor, selecciona una opción válida.");
             }
         }
-    }
+    
+}
+
 
     private void displayMenu() {
         System.out.println("Menú:");

@@ -1,89 +1,73 @@
-/*
- * Universidad del Valle de Guatemala
- * Algoritmos y Estructura de Datos – sección 40
- * Roberto Barreda – 23354 | Mia Fuentes - 23775
- */
-
- import java.util.EmptyStackException;
- import java.util.Stack;
-
 public class OperacionesAritmeticas {
-    private Stack<Integer> stack;
+    private CustomStack<Integer> stack;
 
     public OperacionesAritmeticas() {
-        stack = new Stack<>();
+        this.stack = new CustomStack<>();
     }
 
     public int evaluatePostfix(String expression) throws IllegalArgumentException {
-        // Dividir la expresión en tokens separados por espacios.
-        String[] tokens = expression.split(" ");
+        String[] tokens = expression.split("\\s+");
 
         for (String token : tokens) {
-            if (isOperand(token)) {
-                stack.push(Integer.parseInt(token));
-            } else if (isOperator(token)) {
-                if (stack.size() < 2) {
-                    throw new IllegalArgumentException("Insufficient operands for operation: " + token);
-                }
-
-                int operand2 = stack.pop();
-                int operand1 = stack.pop();
-
-                int result = performOperation(token.charAt(0), operand1, operand2);
-                stack.push(result);
+            if (isNumeric(token)) {
+                stack.push(Integer.valueOf(token));
             } else {
-                throw new IllegalArgumentException("Invalid token in expression: " + token);
+                performOperation(token);
             }
         }
-
+        //Verifica si el stack esta vacio. 
         if (stack.size() != 1) {
-            throw new IllegalArgumentException("Invalid expression format");
+            throw new IllegalArgumentException("Invalid expression: insufficient operands or too many operators");
         }
 
         return stack.pop();
     }
-    
-    //Verifica si un token es un operando
-    private boolean isOperand(String token) {
+
+    private boolean isNumeric(String str) {
         try {
-            Integer.parseInt(token);
+            Integer.parseInt(str);
             return true;
         } catch (NumberFormatException e) {
             return false;
         }
     }
 
-    /**
-     * Realiza la operación especificada entre dos operandos.
-     *
-     * @param operator El operador a aplicar.
-     * @param operand1 El primer operando.
-     * @param operand2 El segundo operando.
-     * @return El resultado de la operación.
-     * @throws IllegalArgumentException Si se intenta dividir por cero.
-     */
+    private void performOperation(String operator) {
+        //Verifica si el archivo tipo .txt se quedo sin datos. 
+        if (stack.isEmpty()) {
+            throw new IllegalArgumentException("Without further information, please add more operands");
+        }
     
-    private int performOperation(char operador, int operand1, int operand2) {
-        switch (operador) {
-            case '+':
-                return operand1 + operand2;
-            case '-':
-                return operand1 - operand2;
-            case '*':
-                return operand1 * operand2;
-            case '/':
-                if (operand2 == 0) {
-                    throw new IllegalArgumentException("Cannot divide by zero");
+        int oper1 = stack.pop();
+
+        //Verifica si el archivo tipo .txt se quedo sin datos. 
+        if (stack.isEmpty()) {
+            throw new IllegalArgumentException("Without further information, please add more operands");
+        }
+    
+        int oper2 = stack.pop();
+
+        //Switch para la calculadora
+        switch (operator) {
+            case "+":
+                stack.push(oper2 + oper1);
+                break;
+            case "-":
+                stack.push(oper2 - oper1);
+                break;
+            case "*":
+                stack.push(oper2 * oper1);
+                break;
+            case "/":
+                if (oper1 == 0) {
+                    //Excepción por si se quiere dividir dentro de 0. 
+                    throw new IllegalArgumentException("Division by zero is not allowed");
                 }
-                return operand1 / operand2;
+                stack.push(oper2 / oper1);
+                break;
             default:
-                throw new IllegalArgumentException("Invalid operator: " + operador);
+            //Manejo de errores
+                throw new IllegalArgumentException("Invalid operator: " + operator);
         }
     }
-
-
-    private boolean isOperator(String token) {
-        return "+-*/".contains(token);
-    }
-
 }
