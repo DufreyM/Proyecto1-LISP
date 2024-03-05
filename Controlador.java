@@ -1,10 +1,14 @@
-
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+
 public class Controlador {
     private Scanner scanner;
+    private Map<String, Integer> variables;
 
     public Controlador(Scanner scanner) {
         this.scanner = scanner;
+        this.variables = new HashMap<>();
     }
 
     public void run() {
@@ -36,13 +40,30 @@ public class Controlador {
                     System.out.println("Definir funciones (DEFUN)...");
                     break;
                 case 4:
-                    System.out.println("Usar SETQ...");
+                SETQ sq = new SETQ();
+                Scanner scn = new Scanner(System.in);
+                System.out.println("Ingrese la instrucción SETQ (en formato (setq variable valor)): ");
+                String setqInput = scn.nextLine().trim();
+                try {
+                    if (!setqInput.startsWith("(setq ") || !setqInput.endsWith(")")) {
+                        throw new IllegalArgumentException("Formato incorrecto para SETQ.");
+                    }
+                    String[] parts = setqInput.substring(6, setqInput.length() - 1).split("\\s+");
+                    if (parts.length != 2) {
+                        throw new IllegalArgumentException("Formato incorrecto para SETQ.");
+                    }
+                    String variableName = parts[0];
+                    int value = Integer.parseInt(parts[1]);
+                    sq.setq(variableName, value);
+                } catch (IllegalArgumentException e) {
+                    System.out.println(e.getMessage());
+                }
                     break;
                 case 5:
                     System.out.println("Utilizar predicados (ATOM, LIST, EQUAL, <, >)...");
                     break;
                 case 6:
-                    System.out.println("Usar condicionales (COND)...");
+                    System.out.println("Aquí va COND...");
                     break;
                 case 7:
                     System.out.println("Pasar parámetros...");
