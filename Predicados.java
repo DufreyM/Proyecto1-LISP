@@ -1,3 +1,4 @@
+import java.util.Comparator;
 import java.util.List;
 
 public class Predicados {
@@ -23,4 +24,40 @@ public boolean isAtom(Object valor) {
 public boolean isList(Object valor) {
         return valor instanceof List;
     }
+
+//Función para comparar como igual, menor, mayor, utilice datos de tipo genérico para evitar problemas con la evaluación. 
+/**
+ * @param <T> :Datos genéricos 
+ * @param a  :Primer elemento a comparar 
+ * @param b  :Segundo elemento a comparar
+ * @param comparador :Comparador de  tipo T que se va a utilizar para la comparación.
+ * @return
+ */
+public static <T> boolean comparar(T a, T b, Comparator<T> comparador) {
+        return comparador.compare(a, b) == 0;
+    }
+
+/**
+ * @param <T> :Datos genéricos 
+ * @param a  :Primer elemento a comparar 
+ * @param b  :Segundo elemento a comparar
+ * @param comparador :Comparador de  tipo T que se va a utilizar para la comparación.
+ * @return
+ */
+
+public static <T> boolean esMayorQue(T a, T b, Comparator<T> comparador) {
+        return comparador.compare(a, b) > 0;
+    }
+
+/**
+ * @param <T> :Datos genéricos 
+ * @param a  :Primer elemento a comparar 
+ * @param b  :Segundo elemento a comparar
+ * @param comparador :Comparador de  tipo T que se va a utilizar para la comparación.
+ * @return
+ */
+public static <T> boolean esMenorQue(T a, T b, Comparator<T> comparador) {
+    return comparador.compare(a, b) < 0;
+}
+
 }
