@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class defun {
     private String defunname;
-    private String[] Parametros;
+    private String Parametros;
     private String[] Instrucciones;
     private CustomStack<String> stack;
     private HashMap<String, Integer> Variables = new HashMap<>();
@@ -34,15 +34,30 @@ public class defun {
     public String Leerdefun(String Instrucciones){
         defun NuevaFuncion = new defun(null, null, null);
         String[] tokens = Instrucciones.split("\\s+");
+        
         for(int i = 0; 1 < tokens.length; i++){
-            if (tokens[i].equals("defun") && i + 1 < tokens.length) {
-                this.defunname == 
+
+            if (tokens[i].equals("(defun") && i + 1 < tokens.length) {
+
+                StringBuilder functionNameBuilder = new StringBuilder();
+                functionNameBuilder.append(tokens[i + 1]);
+
+                StringBuilder parameterBuilder = new StringBuilder();
+
                 if(tokens[i].equals("(")){
+
                     int j = i + 2;
+
                     while (!tokens[j].equals(")") && j < tokens.length) {
-                        stack.push(tokens[j]);
+
+                        parameterBuilder.append(j);
                         j++;
+
                     }
+                    
+                    
+                    this.defunname = functionNameBuilder.toString();
+                    this.Parametros = parameterBuilder.toString();
                     break;
                 }
             }
@@ -88,7 +103,7 @@ public class defun {
         return this.defunname;
     }
 
-    public String[] getParametros(){
+    public String getParametros(){
         return this.Parametros;
     }
     
