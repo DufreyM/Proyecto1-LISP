@@ -30,7 +30,11 @@ public class Controlador {
                     break;
                     
                 case 2:
-                    System.out.println("Usar instrucción QUOTE...");
+                    Scanner scaner = new Scanner(System.in);
+                    System.out.println("Instrucción QUOTE");
+                    System.out.println("Escribe tu expresión Lisp:");
+                    String lispExpression = scaner.nextLine();
+                    Quote.eval(lispExpression);
                     break;
                 case 3:
                     System.out.println("Definir funciones (DEFUN)...");
