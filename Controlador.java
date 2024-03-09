@@ -1,19 +1,19 @@
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 
 public class Controlador {
     private Scanner scanner;
-    private Map<String, Integer> variables;
+    private SETQ setq;
 
     public Controlador(Scanner scanner) {
         this.scanner = scanner;
-        this.variables = new HashMap<>();
+        this.setq = new SETQ();
     }
 
     public void run() {
         OperacionesAritmeticas operaciones = new OperacionesAritmeticas();
+        COND cnd = new COND();
         boolean exit = false;
+
         while (!exit) {
             displayMenu();
             int option = getUserInput();
@@ -40,21 +40,11 @@ public class Controlador {
                     System.out.println("Definir funciones (DEFUN)...");
                     break;
                 case 4:
-                SETQ sq = new SETQ();
                 Scanner scn = new Scanner(System.in);
                 System.out.println("Ingrese la instrucción SETQ (en formato (setq variable valor)): ");
-                String setqInput = scn.nextLine().trim();
+                String input = scn.nextLine().trim();
                 try {
-                    if (!setqInput.startsWith("(setq ") || !setqInput.endsWith(")")) {
-                        throw new IllegalArgumentException("Formato incorrecto para SETQ.");
-                    }
-                    String[] parts = setqInput.substring(6, setqInput.length() - 1).split("\\s+");
-                    if (parts.length != 2) {
-                        throw new IllegalArgumentException("Formato incorrecto para SETQ.");
-                    }
-                    String variableName = parts[0];
-                    int value = Integer.parseInt(parts[1]);
-                    sq.setq(variableName, value);
+                    setq.processSetq(input);
                 } catch (IllegalArgumentException e) {
                     System.out.println(e.getMessage());
                 }
@@ -62,9 +52,31 @@ public class Controlador {
                 case 5:
                     System.out.println("Utilizar predicados (ATOM, LIST, EQUAL, <, >)...");
                     break;
-                case 6:
-                    System.out.println("Aquí va COND...");
+
+                    case 6:
+                    scn = new Scanner(System.in);
+                    System.out.println("Ingrese las condiciones y expresiones en formato (cond (operador valor1 valor2)): ");
+                    String inputc = scn.nextLine().trim();
+                    try {
+                        if (!inputc.startsWith("(cond (") || !inputc.endsWith("))")) {
+                            throw new IllegalArgumentException("Formato incorrecto para condición.");
+                        }
+                        String innerinputc = inputc.substring(7, inputc.length() - 2).trim();
+                        String[] parts = innerinputc.split("\\s+");
+                        if (parts.length != 3) {
+                            throw new IllegalArgumentException("Formato incorrecto para condición.");
+                        }
+                        String operator = parts[0];
+                        int value1 = Integer.parseInt(parts[1]);
+                        int value2 = Integer.parseInt(parts[2]);
+                        String result = cnd.evaluateCond(operator, value1, value2);
+                        System.out.println("Resultado de COND: " + result);
+                    } catch (IllegalArgumentException e) {
+                        System.out.println(e.getMessage());
+                    }
                     break;
+                
+
                 case 7:
                     System.out.println("Pasar parámetros...");
                     break;
