@@ -1,38 +1,53 @@
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.List;
 
 public class ArchiveReader {
 
-    public void Interpretador(String FilePath){
-        try (BufferedReader br = new BufferedReader(new FileReader(FilePath))) {
+    public static void main(String[] args) {
+        ArchiveReader reader = new ArchiveReader();
+        reader.interpretador("PRUEBA.txt");
+    }
+
+    public void interpretador(String filePath) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String linea;
+            boolean dentroDefun = false;
+            String nombreFuncion = null;
+            List<String> parametros = new ArrayList<>();
+
             while ((linea = br.readLine()) != null) {
-                String[] tokens = linea.split("\\s+");
+                String[] tokens = linea.trim().split("\\s+");
+
                 for (int i = 0; i < tokens.length; i++) {
                     String token = tokens[i];
+
                     if (token.equals("(defun")) {
-                        System.out.println("Encontré defun");
-    
-                        // Buscar ' después de (defun
-                        if(token.equals("'")){
-                            System.out.println("Encontré '");
-                        } else if(token.equals(")")){
-                            System.out.println("Encontré )");
-                        }
+                        dentroDefun = true;
+                        nombreFuncion = tokens[i + 1];
+                        continue;
+                    }
+
+                    if (dentroDefun && token.equals("(")) {
+                        // Comenzamos a leer los parámetros
+                        parametros.clear(); // Limpiamos la lista de parámetros
                         for (int j = i + 1; j < tokens.length; j++) {
-                            if (tokens[j].equals("'")) {
-                                System.out.println("Encontré ' después de defun en la posición: ");
-                            } else if (tokens[j].equals(")")) {
-                                System.out.println("Encontré ) después de defun en la posición: ");
+                            if (tokens[j].equals(")")) {
+                                // Fin de los parámetros
+                                break;
                             }
+                            parametros.add(tokens[j]);
                         }
-                    } else if(token.equals("(setq")){
-                        System.out.println("Encontré setq");
+                        continue;
+                    }
+
+                    if (dentroDefun && token.equals(")")) {
+                        dentroDefun = false;
+                        procesarDefun(nombreFuncion, parametros);
+                        nombreFuncion = null; // Limpiamos el nombre de la función
+                        parametros.clear(); // Limpiamos la lista de parámetros
                     }
                 }
             }
@@ -41,5 +56,8 @@ public class ArchiveReader {
         }
     }
 
-    
+    private void procesarDefun(String nombreFuncion, List<String> parametros) {
+        System.out.println("Función definida: " + nombreFuncion);
+        System.out.println("Parámetros: " + parametros);
+    }
 }
