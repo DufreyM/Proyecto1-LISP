@@ -2,9 +2,13 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ArchiveReader {
+
+    private Map<String, String> funciones = new HashMap<>();
 
     public static void main(String[] args) {
         ArchiveReader interpretador = new ArchiveReader();
@@ -31,11 +35,13 @@ public class ArchiveReader {
     private void processContent(String content) {
         String[] lines = content.split("\n");
         boolean dentroDefun = false;
+        boolean dentroSetQ = false;
         StringBuilder nombreFuncion = new StringBuilder();
+        StringBuilder nombresetQ = new StringBuilder();
         List<String> parametros = new ArrayList<>();
+        List<String> infoSetQ = new ArrayList<>();
         StringBuilder cuerpoFuncion = new StringBuilder();
         
-
         for (String line : lines) {
             line = line.trim();
             if (line.startsWith("(defun")) {
@@ -70,7 +76,27 @@ public class ArchiveReader {
                     procesarDefun(nombreFuncion.toString(), parametros, cuerpoFuncion.toString());
                 }
             } else if(line.startsWith("(setQ")){
+                int inicioNombre = line.indexOf("(setQ") + 6; // Longitud de "(setQ "
+                int finNombre = line.indexOf(' ', inicioNombre);
+                nombresetQ.append(line.substring(inicioNombre, finNombre));
 
+                int inicioParametros = line.indexOf('(', finNombre);
+                int finParametros = line.indexOf(')', inicioParametros);
+                String[] params = line.substring(inicioParametros + 1, finParametros).split(" ");
+                for (String param : params) {
+                    if (!param.isEmpty()) {
+                        infoSetQ.add(param);
+                    }
+                }
+                procesarsetQ(nombresetQ.toString(), infoSetQ);
+
+            } else if(!line.startsWith("(defun")){
+                for (String nombre : funciones.keySet()) {
+                    if (line.contains("(" + nombre)) {
+                        llamadaFun(nombre, line);
+                        break; 
+                    }
+                }
             }
         }
     }
@@ -79,5 +105,44 @@ public class ArchiveReader {
         System.out.println("Función definida: " + nombreFuncion);
         System.out.println("Parámetros: " + parametros);
         System.out.println("Cuerpo de la función:\n" + cuerpoFuncion);
+        funciones.put(nombreFuncion, cuerpoFuncion);
     }
+
+    private void procesarsetQ(String nombreVariable, List<String> Valores){
+        System.out.println("SetQ definido: " + nombreVariable);
+        System.out.println("Parámetros:" + Valores);
+    }
+
+    private void llamadaFun(String nombreFun, String llamada){
+        System.out.println("Llamada a la función: " + nombreFun);
+        System.out.println("Con instrucciones:" + funciones.get(nombreFun));
+    }
+    // private void llamadaFun(String nombreFun, String llamada){
+    //     System.out.println("Llamada a la función: " + nombreFun);
+    //     System.out.println("Con instrucciones " + llamada);
+
+    //     String[] partes = llamada.split("\\s+");
+    //     String nombreFuncion = partes[0].substring(1); // Eliminar el paréntesis "("
+    //     String argumentos = llamada.substring(llamada.indexOf("(") + 1, llamada.indexOf(")"));
+
+    //     // Buscar la definición de la función correspondiente
+    //     String cuerpoFuncion = funciones.get(nombreFuncion);
+        
+    //     if (cuerpoFuncion != null) {
+    //         // Reemplazar los parámetros con los argumentos
+    //         for (int i = 0; i < parametros.size(); i++) {
+    //             cuerpoFuncion = cuerpoFuncion.replaceAll(parametros.get(i), partes[i + 1]);
+    //         }
+
+    //         // Ejecutar el cuerpo de la función (aquí puedes implementar la lógica para ejecutar el cuerpo de la función)
+    //         System.out.println("Llamada a la función: " + nombreFuncion);
+    //         System.out.println("Con argumentos: " + argumentos);
+    //         System.out.println("Cuerpo de la función ejecutado con argumentos:");
+    //         System.out.println(cuerpoFuncion);
+    //     } else {
+    //         System.out.println("La función '" + nombreFuncion + "' no está definida.");
+    //     }
+    // }
+
+
 }
