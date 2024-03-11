@@ -1,9 +1,17 @@
 import java.util.Map;
 
-public class COND {
-    public COND() {
-    }
+/**
+ * Clase que contiene métodos para evaluar condiciones.
+ */
 
+public class COND {
+    /**
+     * Evalúa una condición simple.
+     * @param operator Describe el operador de comparación (> = <)
+     * @param value1 El primer valor que el usuario quiera comparar
+     * @param value2 El segundo valor que el usuario quiera comparar
+     * @return "válido" si la condición se cumple, "no válido" de lo contrario
+     */
     public String evaluateCond(String operator, int value1, int value2) {
         switch (operator) {
             case ">":
@@ -27,6 +35,12 @@ public class COND {
         return "no válido";
     }
 
+    /**
+     * Evalúa una condición compuesta.
+     * @param conditions Un array de condiciones en formato de cadena.
+     * @param variables Un mapa que contiene las variables y sus valores.
+     * @return "válido" si la condición se cumple, "no válido" de lo contrario.
+     */
     public String evaluateCond(String[] conditions, Map<String, Integer> variables) {
         if (conditions.length != 1) {
             throw new IllegalArgumentException("Formato incorrecto para condición.");
