@@ -33,6 +33,8 @@ public class ArchiveReader {
         boolean dentroDefun = false;
         StringBuilder nombreFuncion = new StringBuilder();
         List<String> parametros = new ArrayList<>();
+        StringBuilder cuerpoFuncion = new StringBuilder();
+        
 
         for (String line : lines) {
             line = line.trim();
@@ -40,6 +42,7 @@ public class ArchiveReader {
                 dentroDefun = true;
                 nombreFuncion.setLength(0);
                 parametros.clear();
+                cuerpoFuncion.setLength(0);
 
                 // Extraer el nombre de la función
                 int inicioNombre = line.indexOf("(defun") + 7; // Longitud de "(defun "
@@ -55,16 +58,26 @@ public class ArchiveReader {
                         parametros.add(param);
                     }
                 }
-                procesarDefun(nombreFuncion.toString(), parametros);
             } else if (dentroDefun) {
-                // Aquí podrías manejar el cuerpo de la función si fuera necesario
-                // Por simplicidad, solo ignoramos cualquier línea dentro de una definición de función
+                // Construir el cuerpo de la función
+                if (!line.isEmpty()) {
+                    cuerpoFuncion.append(line).append("\n");
+                }
+                
+                // Verificar si es el final de la definición de función
+                if (line.endsWith(")")) {
+                    dentroDefun = false;
+                    procesarDefun(nombreFuncion.toString(), parametros, cuerpoFuncion.toString());
+                }
+            } else if(line.startsWith("(setQ")){
+
             }
         }
     }
 
-    private void procesarDefun(String nombreFuncion, List<String> parametros) {
+    private void procesarDefun(String nombreFuncion, List<String> parametros, String cuerpoFuncion) {
         System.out.println("Función definida: " + nombreFuncion);
         System.out.println("Parámetros: " + parametros);
+        System.out.println("Cuerpo de la función:\n" + cuerpoFuncion);
     }
 }
