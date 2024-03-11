@@ -9,10 +9,10 @@ import java.util.Map;
 public class ArchiveReader {
 
     private Map<String, String> funciones = new HashMap<>();
-
     public static void main(String[] args) {
         ArchiveReader interpretador = new ArchiveReader();
         interpretador.interpretador("PRUEBA.txt");
+        
     }
 
     public void interpretador(String filePath) {
@@ -41,7 +41,7 @@ public class ArchiveReader {
         List<String> parametros = new ArrayList<>();
         List<String> infoSetQ = new ArrayList<>();
         StringBuilder cuerpoFuncion = new StringBuilder();
-        
+        SETQ setq = new SETQ();
         for (String line : lines) {
             line = line.trim();
             if (line.startsWith("(defun")) {
@@ -75,20 +75,8 @@ public class ArchiveReader {
                     dentroDefun = false;
                     procesarDefun(nombreFuncion.toString(), parametros, cuerpoFuncion.toString());
                 }
-            } else if(line.startsWith("(setQ")){
-                int inicioNombre = line.indexOf("(setQ") + 6; // Longitud de "(setQ "
-                int finNombre = line.indexOf(' ', inicioNombre);
-                nombresetQ.append(line.substring(inicioNombre, finNombre));
-
-                int inicioParametros = line.indexOf('(', finNombre);
-                int finParametros = line.indexOf(')', inicioParametros);
-                String[] params = line.substring(inicioParametros + 1, finParametros).split(" ");
-                for (String param : params) {
-                    if (!param.isEmpty()) {
-                        infoSetQ.add(param);
-                    }
-                }
-                procesarsetQ(nombresetQ.toString(), infoSetQ);
+            } else if(line.startsWith("(setq")){
+                setq.processSetq(line);
 
             } else if(!line.startsWith("(defun")){
                 for (String nombre : funciones.keySet()) {
@@ -108,8 +96,7 @@ public class ArchiveReader {
         funciones.put(nombreFuncion, cuerpoFuncion);
     }
 
-    private void procesarsetQ(String nombreVariable, List<String> Valores){
-        System.out.println("SetQ definido: " + nombreVariable);
+    private void procesarsetQ(List<String> Valores){
         System.out.println("Parámetros:" + Valores);
     }
 
@@ -117,6 +104,7 @@ public class ArchiveReader {
         System.out.println("Llamada a la función: " + nombreFun);
         System.out.println("Con instrucciones:" + funciones.get(nombreFun));
     }
+
     // private void llamadaFun(String nombreFun, String llamada){
     //     System.out.println("Llamada a la función: " + nombreFun);
     //     System.out.println("Con instrucciones " + llamada);
