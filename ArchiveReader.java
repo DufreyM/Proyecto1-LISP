@@ -7,47 +7,64 @@ import java.util.List;
 public class ArchiveReader {
 
     public static void main(String[] args) {
-        ArchiveReader reader = new ArchiveReader();
-        reader.interpretador("PRUEBA.txt");
+        ArchiveReader interpretador = new ArchiveReader();
+        interpretador.interpretador("PRUEBA.txt");
     }
 
     public void interpretador(String filePath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String linea;
+            int caracter;
             boolean dentroDefun = false;
-            String nombreFuncion = null;
+            boolean leyendoNombreFuncion = false;
+            boolean leyendoParametros = false;
+            StringBuilder nombreFuncion = new StringBuilder();
             List<String> parametros = new ArrayList<>();
 
-            while ((linea = br.readLine()) != null) {
-                String[] tokens = linea.trim().split("\\s+");
+            while ((caracter = br.read()) != -1) {
+                char c = (char) caracter;
 
-                for (int i = 0; i < tokens.length; i++) {
-                    String token = tokens[i];
+                if (c == '(' && !dentroDefun) {
+                    dentroDefun = true;
+                    leyendoNombreFuncion = true;
+                    continue;
+                }
 
-                    if (token.equals("(defun")) {
-                        dentroDefun = true;
-                        nombreFuncion = tokens[i + 1];
-                        continue;
+                if (c == '(' && dentroDefun) {
+                    // Comenzamos a leer los parámetros
+                    leyendoNombreFuncion = false;
+                    leyendoParametros = true;
+                    continue;
+                }
+
+                if (c == ')' && dentroDefun && !leyendoParametros) {
+                    // Fin de la definición de la función
+                    dentroDefun = false;
+                    procesarDefun(nombreFuncion.toString(), parametros);
+                    nombreFuncion.setLength(0);
+                    parametros.clear();
+                    continue;
+                }
+
+                if (c == ')' && dentroDefun && leyendoParametros) {
+                    // Fin de los parámetros
+                    leyendoParametros = false;
+                    continue;
+                }
+
+                if (dentroDefun && leyendoNombreFuncion) {
+                    if (c != ' ') {
+                        nombreFuncion.append(c);
+                    } else {
+                        leyendoNombreFuncion = false;
                     }
+                    continue;
+                }
 
-                    if (dentroDefun && token.equals("(")) {
-                        // Comenzamos a leer los parámetros
-                        parametros.clear(); // Limpiamos la lista de parámetros
-                        for (int j = i + 1; j < tokens.length; j++) {
-                            if (tokens[j].equals(")")) {
-                                // Fin de los parámetros
-                                break;
-                            }
-                            parametros.add(tokens[j]);
+                if (dentroDefun && leyendoParametros) {
+                    if (c != ' ') {
+                        if (c != '(' && c != ')') {
+                            parametros.add(Character.toString(c));
                         }
-                        continue;
-                    }
-
-                    if (dentroDefun && token.equals(")")) {
-                        dentroDefun = false;
-                        procesarDefun(nombreFuncion, parametros);
-                        nombreFuncion = null; // Limpiamos el nombre de la función
-                        parametros.clear(); // Limpiamos la lista de parámetros
                     }
                 }
             }
