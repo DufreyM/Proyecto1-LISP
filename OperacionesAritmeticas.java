@@ -6,7 +6,12 @@ public class OperacionesAritmeticas {
         for (int i = tokens.length - 1; i >= 0; i--) {
             stack.push(tokens[i]);
         }
-        return evaluateStack();
+        try {
+            return evaluateStack();
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+            return 0;
+        }
     }
 
     int evaluateStack() {
@@ -21,12 +26,23 @@ public class OperacionesAritmeticas {
             } else if (operator.equals("*")) {
                 result = evaluateStack() * evaluateStack();
             } else if (operator.equals("/")) {
-                result = evaluateStack() / evaluateStack();
+                int divisor = evaluateStack();
+                int dividend = evaluateStack();
+                if (divisor == 0) {
+                    throw new ArithmeticException("División por cero");
+                }
+                result = dividend / divisor;
+            } else {
+                throw new IllegalArgumentException("Operador inválido: " + operator);
             }
             stack.pop(); // Remove ")"
             return result;
         } else {
-            return Integer.parseInt(token);
+            try {
+                return Integer.parseInt(token);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Token no válido: " + token);
+            }
         }
     }
 }
