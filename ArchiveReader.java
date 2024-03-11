@@ -13,63 +13,53 @@ public class ArchiveReader {
 
     public void interpretador(String filePath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            int caracter;
-            boolean dentroDefun = false;
-            boolean leyendoNombreFuncion = false;
-            boolean leyendoParametros = false;
-            StringBuilder nombreFuncion = new StringBuilder();
-            List<String> parametros = new ArrayList<>();
+            StringBuilder content = new StringBuilder();
+            String line;
 
-            while ((caracter = br.read()) != -1) {
-                char c = (char) caracter;
-
-                if (c == '(' && !dentroDefun) {
-                    dentroDefun = true;
-                    leyendoNombreFuncion = true;
-                    continue;
-                }
-
-                if (c == '(' && dentroDefun) {
-                    // Comenzamos a leer los parámetros
-                    leyendoNombreFuncion = false;
-                    leyendoParametros = true;
-                    continue;
-                }
-
-                if (c == ')' && dentroDefun && !leyendoParametros) {
-                    // Fin de la definición de la función
-                    dentroDefun = false;
-                    procesarDefun(nombreFuncion.toString(), parametros);
-                    nombreFuncion.setLength(0);
-                    parametros.clear();
-                    continue;
-                }
-
-                if (c == ')' && dentroDefun && leyendoParametros) {
-                    // Fin de los parámetros
-                    leyendoParametros = false;
-                    continue;
-                }
-
-                if (dentroDefun && leyendoNombreFuncion) {
-                    if (c != ' ') {
-                        nombreFuncion.append(c);
-                    } else {
-                        leyendoNombreFuncion = false;
-                    }
-                    continue;
-                }
-
-                if (dentroDefun && leyendoParametros) {
-                    if (c != ' ') {
-                        if (c != '(' && c != ')') {
-                            parametros.add(Character.toString(c));
-                        }
-                    }
-                }
+            // Leer el contenido completo del archivo
+            while ((line = br.readLine()) != null) {
+                content.append(line).append("\n");
             }
+
+            // Procesar el contenido en busca de definiciones de función
+            processContent(content.toString());
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void processContent(String content) {
+        String[] lines = content.split("\n");
+        boolean dentroDefun = false;
+        StringBuilder nombreFuncion = new StringBuilder();
+        List<String> parametros = new ArrayList<>();
+
+        for (String line : lines) {
+            line = line.trim();
+            if (line.startsWith("(defun")) {
+                dentroDefun = true;
+                nombreFuncion.setLength(0);
+                parametros.clear();
+
+                // Extraer el nombre de la función
+                int inicioNombre = line.indexOf("(defun") + 7; // Longitud de "(defun "
+                int finNombre = line.indexOf(' ', inicioNombre);
+                nombreFuncion.append(line.substring(inicioNombre, finNombre));
+
+                // Extraer los parámetros
+                int inicioParametros = line.indexOf('(', finNombre);
+                int finParametros = line.indexOf(')', inicioParametros);
+                String[] params = line.substring(inicioParametros + 1, finParametros).split(" ");
+                for (String param : params) {
+                    if (!param.isEmpty()) {
+                        parametros.add(param);
+                    }
+                }
+                procesarDefun(nombreFuncion.toString(), parametros);
+            } else if (dentroDefun) {
+                // Aquí podrías manejar el cuerpo de la función si fuera necesario
+                // Por simplicidad, solo ignoramos cualquier línea dentro de una definición de función
+            }
         }
     }
 
