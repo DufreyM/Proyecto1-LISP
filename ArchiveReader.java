@@ -38,6 +38,10 @@ public class ArchiveReader {
         }
     }
 
+    /**
+     * Procesa el contenido del archivo, identificando y ejecutando definiciones de función, asignaciones y otras expresiones.
+     * @param content Contenido completo del archivo a procesar.
+     */
     private void processContent(String content) {
         String[] lines = content.split("\n");
         boolean dentroDefun = false;
@@ -129,11 +133,22 @@ public class ArchiveReader {
         }
     }
 
+    /**
+     * Procesa y almacena la definición de una nueva función.
+     * @param nombreFuncion Nombre de la función definida.
+     * @param parametros Lista de parámetros de la función.
+     * @param cuerpoFuncion Cuerpo de la función.
+     */
     private void procesarDefun(String nombreFuncion, List<String> parametros, String cuerpoFuncion) {
         deFun nuevaFuncion = new deFun(nombreFuncion, parametros, cuerpoFuncion);
         listaDeFuns.add(nuevaFuncion);
     }
 
+    /**
+     * Verifica si una línea de texto contiene la llamada a una función definida por el usuario.
+     * @param line Línea de texto a verificar.
+     * @return true si la línea contiene una llamada a función, false en caso contrario.
+     */
     private boolean isFunctionCall(String line) {
         for (deFun fun : listaDeFuns) {
             if (line.contains(fun.getDeFunname())) {
@@ -143,6 +158,11 @@ public class ArchiveReader {
         return false; // No se encontró ninguna función definida en la línea.
     }
 
+    /**
+     * Procesa una llamada a función, ejecutando la función y retornando el resultado.
+     * @param line Línea de texto que contiene la llamada a la función.
+     * @return El resultado de la ejecución de la función.
+     */
     private String processFunction(String line) {
         for (deFun fun : listaDeFuns) {
             String funcionLlamada = fun.getDeFunname();
@@ -178,6 +198,10 @@ public class ArchiveReader {
         return line;
     }
 
+    /**
+     * Evalúa si una expresión dada es un átomo.
+     * @param expresion La expresión a evaluar.
+     */
     public void evaluarAtom(String expresion) {
         String contenidoExpresion = expresion.substring("(atom ".length(), expresion.length() - 1).trim();
 
@@ -191,7 +215,13 @@ public class ArchiveReader {
         }
     }
 
+    /**
+     * Evalúa una expresión. Este es un método stub en el código proporcionado.
+     * @param expresion La expresión a evaluar.
+     * @return El resultado de la evaluación.
+     */
     private Object evaluarExpresion(String expresion) {
         return expresion;
     }
+    //Finaliza ArchiveReader
 }
