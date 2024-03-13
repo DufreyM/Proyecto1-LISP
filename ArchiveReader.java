@@ -6,15 +6,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Clase que implementa un interpretador básico para procesar y ejecutar comandos desde un archivo.
+ * Capaz de manejar definiciones de funciones, asignaciones de variables, y evaluaciones de expresiones.
+ */
 public class ArchiveReader {
 
-    private Map<String, String> funciones = new HashMap<>();
-    public static void main(String[] args) {
-        ArchiveReader interpretador = new ArchiveReader();
-        interpretador.interpretador("PRUEBA.txt");
-        
-    }
+    private List<deFun> listaDeFuns = new ArrayList<>();
+    private SETQ setq = new SETQ();
+    private Predicados predicados = new Predicados();
+    private OperacionesAritmeticas opp = new OperacionesAritmeticas();
 
+    /**
+     * Lee y procesa el contenido de un archivo de texto para ejecutar las instrucciones definidas.
+     * @param filePath Ruta del archivo a interpretar.
+     */
     public void interpretador(String filePath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             StringBuilder content = new StringBuilder();
@@ -35,13 +41,10 @@ public class ArchiveReader {
     private void processContent(String content) {
         String[] lines = content.split("\n");
         boolean dentroDefun = false;
-        boolean dentroSetQ = false;
         StringBuilder nombreFuncion = new StringBuilder();
-        StringBuilder nombresetQ = new StringBuilder();
         List<String> parametros = new ArrayList<>();
-        List<String> infoSetQ = new ArrayList<>();
         StringBuilder cuerpoFuncion = new StringBuilder();
-        SETQ setq = new SETQ();
+
         for (String line : lines) {
             line = line.trim();
             if (line.startsWith("(defun")) {
@@ -57,8 +60,9 @@ public class ArchiveReader {
 
                 // Extraer los parámetros
                 int inicioParametros = line.indexOf('(', finNombre);
-                int finParametros = line.indexOf(')', inicioParametros);
-                String[] params = line.substring(inicioParametros + 1, finParametros).split(" ");
+                int finParametros = line.lastIndexOf(')');
+                String paramsLine = line.substring(inicioParametros + 1, finParametros);
+                String[] params = paramsLine.split("\\s");
                 for (String param : params) {
                     if (!param.isEmpty()) {
                         parametros.add(param);
@@ -67,68 +71,127 @@ public class ArchiveReader {
             } else if (dentroDefun) {
                 // Construir el cuerpo de la función
                 if (!line.isEmpty()) {
+                    // Agregar la línea al cuerpo de la función
                     cuerpoFuncion.append(line).append("\n");
-                }
-                
-                // Verificar si es el final de la definición de función
-                if (line.endsWith(")")) {
-                    dentroDefun = false;
-                    procesarDefun(nombreFuncion.toString(), parametros, cuerpoFuncion.toString());
-                }
-            } else if(line.startsWith("(setq")){
-                setq.processSetq(line);
 
-            } else if(!line.startsWith("(defun")){
-                for (String nombre : funciones.keySet()) {
-                    if (line.contains("(" + nombre)) {
-                        llamadaFun(nombre, line);
-                        break; 
+                    // Verificar si es el final de la definición de función
+                    int indexOfClosingParenthesis = line.indexOf("))");
+                    if (indexOfClosingParenthesis != -1) {
+                        dentroDefun = false;
+                        // Tomar solo el contenido hasta el primer paréntesis cerrado
+                        cuerpoFuncion.setLength(cuerpoFuncion.length() - (line.length() - indexOfClosingParenthesis));
+                        procesarDefun(nombreFuncion.toString(), parametros, cuerpoFuncion.toString());
+                    }
+                }
+            } else if (line.startsWith("(setq")) {
+                setq.processSetq(line);
+            } else if (line.startsWith("(atom")) {
+                evaluarAtom(line);
+            } else if (!line.startsWith("(defun") && !line.startsWith("(setq")) {
+                // Verificar si la línea contiene una llamada a función
+                if (isFunctionCall(line)) {
+                    String result = processFunction(line);
+                    System.out.println("Resultado de la función: " + result + "\n");
+                } else {
+                    // Si no es una llamada a función, continuar con la lógica actual
+                    boolean foundFunction = false;
+                    for (deFun fun : listaDeFuns) {
+                        if (line.contains(fun.getDeFunname())) {
+                            System.out.println("Encontre la funcion" + fun.getDeFunname());
+                            System.out.println(fun.getInstrucciones());
+                            foundFunction = true;
+                        }
+                    }
+
+                    if (!foundFunction) {
+                        // Buscar quotes
+                        if (line.toLowerCase().startsWith("quote ")) {
+                            String result = Quote.eval(line);
+                            System.out.println("Resultado del quote: " + result + "\n");
+                        } else if (line.equals("'")) {
+                            System.out.println("Expresión no válida: debe haber un valor después de la comilla simple.");
+                        } else if (line.startsWith("'")) {
+                            String result = Quote.eval(line);
+                            System.out.println("Resultado del quote: " + result + "\n");
+                        } else if (line.startsWith("(quote ")) {
+                            String result = Quote.eval(line.substring(0, line.length() - 1));
+                            System.out.println("Resultado del quote: " + result + "\n");
+                        }
                     }
                 }
             }
         }
+
+        // Imprime las variables que tiene el programa
+        System.out.println("\n Estado final de las variables:\n");
+        for (Map.Entry<String, Integer> entry : setq.getVariables().entrySet()) {
+            System.out.println(entry.getKey() + " = " + entry.getValue() + "\n");
+        }
     }
 
     private void procesarDefun(String nombreFuncion, List<String> parametros, String cuerpoFuncion) {
-        System.out.println("Función definida: " + nombreFuncion);
-        System.out.println("Parámetros: " + parametros);
-        System.out.println("Cuerpo de la función:\n" + cuerpoFuncion);
-        funciones.put(nombreFuncion, cuerpoFuncion);
+        deFun nuevaFuncion = new deFun(nombreFuncion, parametros, cuerpoFuncion);
+        listaDeFuns.add(nuevaFuncion);
     }
 
-    private void procesarsetQ(List<String> Valores){
-        System.out.println("Parámetros:" + Valores);
+    private boolean isFunctionCall(String line) {
+        for (deFun fun : listaDeFuns) {
+            if (line.contains(fun.getDeFunname())) {
+                return true; // La línea contiene el nombre de una función definida.
+            }
+        }
+        return false; // No se encontró ninguna función definida en la línea.
     }
 
-    private void llamadaFun(String nombreFun, String llamada){
-        System.out.println("Llamada a la función: " + nombreFun);
-        System.out.println("Con instrucciones:" + funciones.get(nombreFun));
+    private String processFunction(String line) {
+        for (deFun fun : listaDeFuns) {
+            String funcionLlamada = fun.getDeFunname();
+            if (line.contains(funcionLlamada)) {
+                // Extraer los argumentos de la llamada a función
+                int inicioArgs = line.indexOf(funcionLlamada) + funcionLlamada.length() + 2;
+                int finArgs = line.indexOf(')', inicioArgs);
+                String argsLine = line.substring(inicioArgs, finArgs);
+                String[] argumentos = argsLine.split("\\s+");
+
+                // Procesar argumentos por si contienen llamadas a funciones
+                for (int i = 0; i < argumentos.length; i++) {
+                    if (isFunctionCall(argumentos[i])) {
+                        argumentos[i] = processFunction(argumentos[i]);
+                    } else if (setq.getVariables().containsKey(argumentos[i])) {
+                        argumentos[i] = setq.getVariables().get(argumentos[i]).toString();
+                    }
+                }
+
+                // Reconstruir la línea con los argumentos ya procesados
+                String instruccionesDepuradas = fun.getInstrucciones();
+                for (int i = 0; i < argumentos.length; i++) {
+                    instruccionesDepuradas = instruccionesDepuradas.replace(Character.toString((char) ('a' + i)),
+                            argumentos[i]);
+                }
+
+                // Este método debería implementarse para evaluar la función
+                return "La respuesta de la operacion " + fun.getDeFunname() + " es "
+                        + opp.evaluateExpression(instruccionesDepuradas);
+            }
+        }
+        // Si la línea no corresponde a una llamada de función, retornar la línea tal cual
+        return line;
     }
 
-    // private void llamadaFun(String nombreFun, String llamada){
-    //     System.out.println("Llamada a la función: " + nombreFun);
-    //     System.out.println("Con instrucciones " + llamada);
+    public void evaluarAtom(String expresion) {
+        String contenidoExpresion = expresion.substring("(atom ".length(), expresion.length() - 1).trim();
 
-    //     String[] partes = llamada.split("\\s+");
-    //     String nombreFuncion = partes[0].substring(1); // Eliminar el paréntesis "("
-    //     String argumentos = llamada.substring(llamada.indexOf("(") + 1, llamada.indexOf(")"));
+        // Evaluar la expresión y luego determinar si es un átomo
+        Object resultado = evaluarExpresion(contenidoExpresion);
 
-    //     // Buscar la definición de la función correspondiente
-    //     String cuerpoFuncion = funciones.get(nombreFuncion);
-        
-    //     if (cuerpoFuncion != null) {
-    //         // Reemplazar los parámetros con los argumentos
-    //         for (int i = 0; i < parametros.size(); i++) {
-    //             cuerpoFuncion = cuerpoFuncion.replaceAll(parametros.get(i), partes[i + 1]);
-    //         }
+        if (predicados.isAtom(resultado)) {
+            System.out.println("\nResultado del Atom: true\n");
+        } else {
+            System.out.println("\nResultado del Atom: false\n");
+        }
+    }
 
-     //        Ejecutar el cuerpo de la función 
-    //         System.out.println("Llamada a la función: " + nombreFuncion);
-    //         System.out.println("Con argumentos: " + argumentos);
-    //         System.out.println("Cuerpo de la función ejecutado con argumentos:");
-    //         System.out.println(cuerpoFuncion);
-    //     } else {
-    //         System.out.println("La función '" + nombreFuncion + "' no está definida.");
-    //     }
-    // }
+    private Object evaluarExpresion(String expresion) {
+        return expresion;
+    }
 }

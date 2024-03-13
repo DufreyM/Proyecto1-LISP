@@ -6,7 +6,7 @@ import java.util.Map;
  */
 
 public class SETQ {
-    private Map<String, Integer> variables;
+    public Map<String, Integer> variables;
 
     public SETQ() {
         this.variables = new HashMap<>();

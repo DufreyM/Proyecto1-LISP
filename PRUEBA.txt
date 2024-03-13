@@ -1,0 +1,18 @@
+(defun suma (a b c)
+(+ ( + a b) c))
+
+(defun resta (a b)
+(- a b))
+
+(defun multiplicacion (a b)
+(* a b))
+
+(setq sardinas 1)
+
+(suma (1 2 4))
+
+(suma (1 2 3))
+
+(resta (1 2))
+
+(multiplicacion (1 2))
