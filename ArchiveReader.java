@@ -73,6 +73,10 @@ public class ArchiveReader {
                         parametros.add(param);
                     }
                 }
+            } else if (line.startsWith("(cond")){
+                String[] parts = line.substring(6, line.length() - 1).split("\\s+");
+                System.out.println(cond.evaluateCond(parts[0], Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
+
             } else if (dentroDefun) {
                 // Construir el cuerpo de la función
                 if (!line.isEmpty()) {
@@ -88,6 +92,8 @@ public class ArchiveReader {
                         procesarDefun(nombreFuncion.toString(), parametros, cuerpoFuncion.toString());
                     }
                 }
+            } else if (line.startsWith("(factorial")){
+                evaluarFactorial(line);
             } else if (line.startsWith("(setq")) {
                 setq.processSetq(line);
             } else if (line.startsWith("(atom")) {
@@ -113,6 +119,9 @@ public class ArchiveReader {
                         if (line.toLowerCase().startsWith("quote ")) {
                             String result = Quote.eval(line);
                             System.out.println("Resultado del quote: " + result + "\n");
+                        } else if (isArithmeticOperation(line)) {
+                            int result = operateArithmeticExpression(line);
+                            System.out.println("Resultado de la operación aritmética: " + result);
                         } else if (line.equals("'")) {
                             System.out.println("Expresión no válida: debe haber un valor después de la comilla simple.");
                         } else if (line.startsWith("'")) {
@@ -121,7 +130,7 @@ public class ArchiveReader {
                         } else if (line.startsWith("(quote ")) {
                             String result = Quote.eval(line.substring(0, line.length() - 1));
                             System.out.println("Resultado del quote: " + result + "\n");
-                        }
+                        } 
                     }
                 }
             } 
@@ -217,6 +226,23 @@ public class ArchiveReader {
     }
 
     /**
+     * Opera una expresión aritmética y devuelve el resultado.
+     * @param expression La expresión aritmética a operar.
+     * @return El resultado de la operación aritmética.
+     */
+    private int operateArithmeticExpression(String expression) {
+        try {
+            return opp.evaluateExpression(expression);
+        } catch (ArithmeticException e) {
+            System.err.println("Error: " + e.getMessage());
+            return 0; // Otra acción apropiada en caso de excepción
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error: " + e.getMessage());
+            return 0; // Otra acción apropiada en caso de excepción
+        }
+    }
+
+    /**
      * Evalúa una expresión. Este es un método stub en el código proporcionado.
      * @param expresion La expresión a evaluar.
      * @return El resultado de la evaluación.
@@ -224,5 +250,47 @@ public class ArchiveReader {
     private Object evaluarExpresion(String expresion) {
         return expresion;
     }
-    //Finaliza ArchiveReader
+    
+    private int getValue(String input, Map<String, Integer> variables) {
+        if (variables.containsKey(input)) {
+            return variables.get(input);
+        }
+        try {
+            return Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("El valor '" + input + "' no es un número o variable válida.");
+        }
+    }
+
+    private void evaluarFactorial(String line) {
+        // Extraer argumento de la llamada a la función factorial
+        int inicioArgs = line.indexOf("(factorial") + "(factorial".length() + 1;
+        int finArgs = line.indexOf(')', inicioArgs);
+        String argLine = line.substring(inicioArgs, finArgs);
+
+        // Evaluar el argumento 
+        int argumento = getValue(argLine, setq.getVariables());
+
+        // Calcular el factorial y mostrar el resultado
+        int resultado = calcularFactorial(argumento);
+        System.out.println("El factorial de " + argumento + " es: " + resultado + "\n");
+    }
+
+    /**
+     * Verifica si una línea es una operación aritmética.
+     * @param line La línea a verificar.
+     * @return true si la línea es una operación aritmética, false en caso contrario.
+     */
+    private boolean isArithmeticOperation(String line) {
+        String arithmeticPattern = ".[0-9]+[\\+\\-\\/\\(\\)].*";
+        // Si la línea coincide con el patrón, se considera una operación aritmética
+        return line.matches(arithmeticPattern);
+    }
+
+    private int calcularFactorial(int n) {
+        if (n == 0 || n == 1) {
+            return 1;
+        }
+        return n * calcularFactorial(n - 1);
+    }    
 }

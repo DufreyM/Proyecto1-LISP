@@ -7,6 +7,8 @@
 (defun multiplicacion (a b)
 (* a b))
 
+(cond > 4 3)
+
 (setq sardinas 1)
 
 (suma (1 2 4))
@@ -17,4 +19,13 @@
 
 (multiplicacion (1 2))
 
-(cond (< 1 4))
+(defun factorial (n)
+  (if (= n 0)
+      1
+      (* n (factorial (- n 1)))))
+
+(factorial sardinas)
+
+(+ 1 2)
+
+(quote TUMAMITA)
