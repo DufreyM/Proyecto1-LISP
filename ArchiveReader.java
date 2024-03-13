@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public class ArchiveReader {
 
+    private COND cond = new COND();
     private List<deFun> listaDeFuns = new ArrayList<>();
     private SETQ setq = new SETQ();
     private Predicados predicados = new Predicados();
@@ -123,7 +124,7 @@ public class ArchiveReader {
                         }
                     }
                 }
-            }
+            } 
         }
 
         // Imprime las variables que tiene el programa

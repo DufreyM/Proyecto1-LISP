@@ -16,3 +16,5 @@
 (resta (1 2))
 
 (multiplicacion (1 2))
+
+(cond (< 1 4))
